@@ -1,5 +1,6 @@
 from transformers import GPT2LMHeadModel, GPT2TokenizerFast
 import random
+import torch
 tok = GPT2TokenizerFast.from_pretrained("gpt2")
 
 vocab = tok.get_vocab()
@@ -8,6 +9,8 @@ auth_ids = [
     if not any([x in tok.decode(token_id) for x in ["c", "C", "ç", "Ç"]])
 ]
 
+mask = torch.full((len(vocab),), float("-inf"))
+mask[auth_ids] = 0
 
 k = 20
 unauth_ids = list(set(vocab.values()) - set(auth_ids))
