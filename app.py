@@ -1,4 +1,5 @@
 from flask import Flask, request
+from tasks import generate
 import time
 from generate_constrained import generate_constrained
 
@@ -7,6 +8,26 @@ app = Flask(__name__)
 @app.route("/")
 def hello_world():
     return "<p>Hello, World!</p>"
+
+@app.route("/generate", methods=["POST"])
+def generate_text():
+    data = request.get_json()
+    r = generate.delay(
+        input_sentence=data["text"],
+        max_new_tokens=data.get("max_token", 20),
+        temperature=data.get("temperature", 0.5),
+        best=data.get("best", True)
+    )
+    return {"task_id": r.id}, 202
+
+@app.get("/result/<task_id>")
+def get_result(task_id):
+    r = generate.AsyncResult(task_id)
+    if not r.ready():
+        return {"status": "pending"}, 202
+    else:
+        return {"status": "done", "result": r.get()}, 200
+        
 
 @app.route("/complete", methods=["POST"])
 def complete_text():
@@ -40,4 +61,4 @@ def complete_text():
     return {"completed_text": completed_text}
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False)
