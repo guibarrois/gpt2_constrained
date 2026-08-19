@@ -5,12 +5,18 @@ from generate_constrained import generate_constrained
 
 app = Flask(__name__)
 
-@app.route("/")
-def hello_world():
-    return "<p>Hello, World!</p>"
-
-@app.route("/generate", methods=["POST"])
+@app.post("/generate")
 def generate_text():
+    """Endpoint to generate text based on the input sentence.
+
+    This endpoint creates a Celery task to complete the `text`. It
+    returns the `id` of the celery task, and the task is executed 
+    asynchronously.
+    The client can then use the `/result/<task_id>` endpoint to check the status of the task and retrieve the result once it's completed.
+
+    The json of the request should contain at least the `text` key, and can optionally contain `max_token`, `temperature`, and `best` keys to customize the generation.
+    """
+    
     data = request.get_json()
     r = generate.delay(
         input_sentence=data["text"],
@@ -22,6 +28,14 @@ def generate_text():
 
 @app.get("/result/<task_id>")
 def get_result(task_id):
+    """Retrieve the result of a generation task.
+
+    The ID of the task is the one returned by the `/generate` endpoint. This endpoint checks the status of the task and returns the result if it's completed.
+    
+    task_id (`str`): The ID of the Celery task.
+    Returns:
+        dict: A dictionary containing the status of the task and, if completed, the result.
+    """
     r = generate.AsyncResult(task_id)
     if not r.ready():
         return {"status": "pending"}, 202
@@ -29,9 +43,9 @@ def get_result(task_id):
         return {"status": "done", "result": r.get()}, 200
         
 
-@app.route("/complete", methods=["POST"])
+@app.post("/complete")
 def complete_text():
-    # Placeholder for the completion logic
+    """Simple completion endpoint."""
     data = request.get_json()
     text = data["text"]
     app.logger.info(f"Received text for completion: {text}")
