@@ -3,3 +3,4 @@ torch
 flask
 celery
 redis
+gunicorn
