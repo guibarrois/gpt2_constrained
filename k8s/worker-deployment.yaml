@@ -15,7 +15,14 @@ spec:
       containers:
       - name: worker
         image: gpt2-service:0.2
+        volumeMounts:
+        - name: hf-cache-volume
+          mountPath: /root/.cache/huggingface
         envFrom:
         - configMapRef:
             name: app-config
         command: ["celery", "-A", "tasks", "worker", "--concurrency=1", "--loglevel=info"]
+      volumes:
+      - name: hf-cache-volume
+        persistentVolumeClaim:
+          claimName: hf-pv-claim
