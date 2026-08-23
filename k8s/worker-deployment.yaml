@@ -15,6 +15,11 @@ spec:
       containers:
       - name: worker
         image: gpt2-service:0.2
+        resources:
+          requests:
+            memory: "2Gi"
+          limits:
+            memory: "2Gi"
         volumeMounts:
         - name: hf-cache-volume
           mountPath: /root/.cache/huggingface
