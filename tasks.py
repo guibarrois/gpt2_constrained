@@ -1,14 +1,19 @@
 from celery import Celery
 import logging
+import os
 from generate_constrained import generate_constrained, load_model
 from celery.signals import worker_process_init
+
+broker_url = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
+backend_url = os.getenv("CELERY_BACKEND_URL", "redis://localhost:6379/1")
 
 logger = logging.getLogger(__name__)
 
 app = Celery(
     'tasks',
-    broker='redis://localhost:6379/0',
-    backend='redis://localhost:6379/1')
+    broker=broker_url,
+    backend=backend_url,
+)
 
 @worker_process_init.connect
 def init_worker(**kwargs):

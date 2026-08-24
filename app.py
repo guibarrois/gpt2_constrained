@@ -1,7 +1,7 @@
 from flask import Flask, request
 from tasks import generate
 import time
-from generate_constrained import generate_constrained
+from generate_constrained import generate_constrained, load_model
 
 app = Flask(__name__)
 
@@ -46,6 +46,11 @@ def get_result(task_id):
 @app.post("/complete")
 def complete_text():
     """Simple completion endpoint."""
+
+    # We have to load the model here because this endpoint is not using Celery, and thus the model is not loaded in a worker process.
+    load_model()
+
+    # Get the input data from the request
     data = request.get_json()
     text = data["text"]
     app.logger.info(f"Received text for completion: {text}")
