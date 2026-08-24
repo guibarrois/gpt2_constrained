@@ -1,14 +1,14 @@
 # Quick start
 
-This repository aims at demonstrating two, things:
-- constrained generation of a self-served model
+This repository aims at demonstrating two things:
+- constrained generation of a self-hosted model
 - self hosting and scaling using Kubernetes and Celery
 
 To run, the repository requires three components: a redis
 server, a celery worker and an api. There are three
 ways to run it (Docker,  Manually, Kubernetes). The most 
 intersting (and the "raison d'être" of this repository)
-for me is Kubernetes, which allows fine grain
+for me is Kubernetes, which allows fine-grained
 control of ressources and scaling.
 
 ## Docker
@@ -75,7 +75,7 @@ kind load docker-image gpt2-service:0.1
 
 ### Step 2
 
-Create the ressources
+Create the resources
 
 ```
 kubectl apply -f k8s
@@ -127,12 +127,12 @@ be enriched by modifying `generate_token_mask.py` file.
 ## Implementation
 
 `generate_token_mask.py` extract the model vocabulary from the tokenizer, and
-return the valid ids according to a simple prodicate. Currently it is very simple
-(e.g. token not containing a list of given characters) and ineficient but I'll work
+return the valid ids according to a simple predicate. Currently it is very simple
+(e.g. token not containing a list of given characters) and inefficient but I'll work
 on that later to improve that.
 
-`generate_constrained.py` contained the base function that does the generation. Logits
-and probabilty are computed, masked, and the next character is selected according to
+`generate_constrained.py` contains the base function that does the generation. Logits
+and probabilities are computed, masked, and the next character is selected according to
 two possible strategies:
 - `best=True` --> select the highest probability token (deterministic)
 - `best=False` --> do multinomial sampling (non-deterministic, with a temperature parameter)
