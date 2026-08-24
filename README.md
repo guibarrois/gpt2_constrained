@@ -9,7 +9,7 @@ server, a celery worker and an api. There are three
 ways to run it (Docker,  Manually, Kubernetes). The most 
 intersting (and the "raison d'être" of this repository)
 for me is Kubernetes, which allows fine-grained
-control of ressources and scaling.
+control of resources and scaling.
 
 ## Docker
 
@@ -95,7 +95,7 @@ kubectl logs -f deploy/worker
 
 NOTE: during the first run, the worker might be running but
 downloading the model, making it unable to run a generation.
-You can check that this is done using the commande above.
+You can check that this is done using the command above.
 Also, this should happen only the first time, or if you
 remove the hugging-face cache
 
@@ -132,7 +132,7 @@ return the valid ids according to a simple predicate. Currently it is very simpl
 on that later to improve that.
 
 `generate_constrained.py` contains the base function that does the generation. Logits
-and probabilities are computed, masked, and the next character is selected according to
+and probabilities are computed, masked, and the next token is selected according to
 two possible strategies:
 - `best=True` --> select the highest probability token (deterministic)
 - `best=False` --> do multinomial sampling (non-deterministic, with a temperature parameter)
@@ -141,3 +141,30 @@ two possible strategies:
 
 This repository is also used to demonstrate the scalable self hosting of an LLM,
 using Kubernetes and Celery as backbones.
+
+The deployment configuration is in the `./k8s` folder.
+
+## Scaling
+
+The use of Celery allows the system to accept requests and queue
+them, so that the server is not overflown. 
+
+Message are  consumed by the workers. The default configuration 
+has one worker replica, but as the worker is stateless you can use 
+more replicas to absorb more tasks.
+
+A next step would be to have an autoscaling mechanism, that increases
+the number of replicas based on the size of the queue.
+
+## Limits
+
+In order to serve in a non-degraded way `gpt-2-small`, the worker
+requires about `1Gi` memory.
+
+Below that, the  might still looks functional, but the worker is
+dramatically slowed by disk access due to the fact that the model cannot be
+loaded fully in cache. 
+
+Note that this is a bit unexpected: pods should be killed when the memory 
+limit is exceeded. I'll go deeper into that in a blogpost to understand
+what's going in on here (_TBD_).
