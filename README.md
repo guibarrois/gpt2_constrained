@@ -57,7 +57,66 @@ and send the same message as above to test.
 
 ## Kubernetes
 
-TO BE DONE
+In order to deploy using kubernetes, you need to have a kubernetes server running.
+Mine was served using `kind`, but it is probably possible to slightly adapt the
+command.
+
+NOTE: in this version, we use as local storage a volume mounted directly in the
+node. This is fine for local test, but not suitable for a multi-node our cloud
+Kubernetes cluster.
+
+### Step 1
+
+Build the docker image and load it on your server. You can user `docker build`
+```
+docker build -t gpt2-service:0.1 .
+kind load docker-image gpt2-service:0.1
+```
+
+### Step 2
+
+Create the ressources
+
+```
+kubectl apply -f k8s
+```
+
+After that you can monitor the worker using
+```
+kubectl get pods
+```
+You should expect three pods (api, redis, worker). If
+they don't reach the `Running` status, you can check the
+logs using:
+
+```
+kubectl logs -f deploy/worker
+```
+
+NOTE: during the first run, the worker might be running but
+downloading the model, making it unable to run a generation.
+You can check that this is done using the commande above.
+Also, this should happen only the first time, or if you
+remove the hugging-face cache
+
+### Step 3
+
+To be able to run request as if you had it on localhost, you can
+run a port forward command:
+```
+kubectl port-forward svc/api 5000:5000
+```
+This way you will be able to run the same curl commands as before
+to test the application
+
+```
+curl -i -X POST http://localhost:5000/generate -H "Content-Type: application/json" -d '{"text":"The capital of Colombia is","max_token":20,"best":true}'
+```
+and 
+```
+curl http://localhost:5000/result/xxxxxx-xxxxxx-xxxxx
+```
+
 
 # Constrained generation
 
@@ -82,5 +141,3 @@ two possible strategies:
 
 This repository is also used to demonstrate the scalable self hosting of an LLM,
 using Kubernetes and Celery as backbones.
-
-
