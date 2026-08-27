@@ -1,0 +1,38 @@
+# Deployment for the API service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-api
+spec:
+  replicas: {{ .Values.api.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-api
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-api
+    spec:
+      containers:
+      - name: {{ .Release.Name }}-api
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        ports:
+        - containerPort: {{ .Values.api.port }}
+        envFrom:
+        - configMapRef:
+            name: {{ .Release.Name }}-configmap
+        command: 
+        {{ toYaml .Values.api.command | nindent 10}}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+---
+# Service for the API service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-api
+spec:
+  selector:
+    app: {{ .Release.Name }}-api
+  ports:
+    - port: {{ .Values.api.port }}
+      targetPort: {{ .Values.api.targetPort }}

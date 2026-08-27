@@ -1,0 +1,47 @@
+# Default values for mychart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
+image:
+
+  repository: gpt2-service
+  # This sets the pull policy for images.
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "0.2"
+
+api:
+  replicaCount: 1
+  command: ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
+  port: 5000
+  targetPort: 5000
+
+worker:
+  replicaCount: 1
+  command: ["celery", "-A", "tasks", "worker", "--concurrency=1", "--loglevel=info"]
+  resources:
+    requests:
+      memory: "2Gi"
+    limits:
+      memory: "2Gi"
+
+storage:
+  pvcName: hf-pv-claim
+  pvSize: 6Gi
+  size: 3Gi
+  storageClassName: manual
+  hostPath:
+    path: /mnt/hf-cache
+
+
+redis:
+  image: redis
+  tag: alpine
+  replicaCount: 1
+  service:
+    port: 6379
+
+config:
+  data:
+      HF_HOME: /root/.cache/huggingface

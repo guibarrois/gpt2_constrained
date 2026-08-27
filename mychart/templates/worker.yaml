@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-worker
+spec:
+  replicas: {{ .Values.worker.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-worker
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-worker
+    spec:
+      containers:
+      - name: {{ .Release.Name }}-worker
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        resources:
+          requests:
+            memory: {{ .Values.worker.resources.requests.memory }}
+          limits:
+            memory: {{ .Values.worker.resources.limits.memory }}
+        volumeMounts:
+        - name: {{ .Release.Name }}-hf-cache-volume
+          mountPath: {{ .Values.config.data.HF_HOME | quote }}
+        envFrom:
+        - configMapRef:
+            name: {{ .Release.Name }}-configmap
+        command:
+        {{ toYaml .Values.worker.command | nindent 10 }}
+      volumes:
+      - name: {{ .Release.Name }}-hf-cache-volume
+        persistentVolumeClaim:
+          claimName: {{ .Values.storage.pvcName }}

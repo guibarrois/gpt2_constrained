@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-configmap
+data:
+  CELERY_BROKER_URL: "redis://{{ .Release.Name }}-redis:{{ .Values.redis.service.port }}/0"
+  CELERY_BACKEND_URL: "redis://{{ .Release.Name }}-redis:{{ .Values.redis.service.port }}/1"
+  HF_HOME: {{ .Values.config.data.HF_HOME | quote }}
